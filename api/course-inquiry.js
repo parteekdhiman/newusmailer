@@ -1,32 +1,32 @@
 import nodemailer from 'nodemailer';
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method not allowed' });
+    }
 
-  const { fullName, email, course, phone, brochureUrl } = req.body;
-  if (!fullName || !email || !course) {
-    return res.status(400).json({ ok: false, error: 'Missing fields' });
-  }
+    const { fullName, email, course, phone, brochureUrl } = req.body;
+    if (!fullName || !email || !course) {
+        return res.status(400).json({ ok: false, error: 'Missing fields' });
+    }
 
-  // Create transporter using environment variables
-  const transporter = nodemailer.createTransporter({
-    host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-    port: Number(process.env.EMAIL_PORT) || 587,
-    secure: process.env.EMAIL_SECURE === 'true' || false,
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
+    // Create transporter using environment variables
+    const transporter = nodemailer.createTransporter({
+        host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+        port: Number(process.env.EMAIL_PORT) || 587,
+        secure: process.env.EMAIL_SECURE === 'true' || false,
+        auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
+        },
+    });
 
-  try {
-    await transporter.sendMail({
-      from: `"Newus Courses" <${process.env.EMAIL_USER}>`,
-      to: process.env.ADMIN_EMAIL,
-      subject: `🎓 New Course Inquiry – ${course}`,
-      html: `
+    try {
+        await transporter.sendMail({
+            from: `"Newus Courses" <${process.env.EMAIL_USER}>`,
+            to: process.env.ADMIN_EMAIL,
+            subject: `🎓 New Course Inquiry – ${course}`,
+            html: `
   <div style="background:#f4f6f8;padding:30px;font-family:Arial,sans-serif;">
     <div style="max-width:600px;margin:auto;background:#ffffff;border-radius:8px;overflow:hidden;">
       
@@ -61,13 +61,13 @@ export default async function handler(req, res) {
     </div>
   </div>
   `,
-    });
+        });
 
-    await transporter.sendMail({
-      from: `"Newus Team" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: `📘 We Received Your Inquiry – ${course}`,
-      html: `
+        await transporter.sendMail({
+            from: `"Newus Team" <${process.env.EMAIL_USER}>`,
+            to: email,
+            subject: `📘 We Received Your Inquiry – ${course}`,
+            html: `
   <div style="background:#f4f6f8;padding:30px;font-family:Arial,sans-serif;">
     <div style="max-width:600px;margin:auto;background:#ffffff;border-radius:8px;overflow:hidden;">
 
@@ -86,9 +86,8 @@ export default async function handler(req, res) {
           <li>🎯 Career guidance</li>
         </ul>
 
-        ${
-          brochureUrl
-            ? `<p style="margin-top:20px;">
+        ${brochureUrl
+                    ? `<p style="margin-top:20px;">
                 <a href="${brochureUrl}"
                    style="display:inline-block;padding:12px 22px;
                    background:#1e40af;color:white;text-decoration:none;
@@ -96,8 +95,8 @@ export default async function handler(req, res) {
                   📄 Download Course Brochure
                 </a>
               </p>`
-            : ""
-        }
+                    : ""
+                }
 
         <p style="margin-top:30px;">
           Regards,<br/>
@@ -111,11 +110,11 @@ export default async function handler(req, res) {
     </div>
   </div>
   `,
-    });
+        });
 
-    res.status(200).json({ ok: true, emailSent: true, brochureUrl });
-  } catch (err) {
-    console.error("Course Inquiry Error:", err);
-    res.status(500).json({ ok: false, error: "Inquiry failed" });
-  }
+        res.status(200).json({ ok: true, emailSent: true, brochureUrl });
+    } catch (err) {
+        console.error("Course Inquiry Error:", err);
+        res.status(500).json({ ok: false, error: "Inquiry failed" });
+    }
 }
