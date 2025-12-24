@@ -1,7 +1,7 @@
-import dotenv from "dotenv";
-import express from "express";
-import cors from "cors";
-import nodemailer from "nodemailer";
+const dotenv = require("dotenv");
+const express = require("express");
+const cors = require("cors");
+const nodemailer = require("nodemailer");
 
 // Load .env only when running locally
 if (process.env.NODE_ENV !== "production") {
