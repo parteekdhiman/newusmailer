@@ -1,6 +1,10 @@
 import nodemailer from 'nodemailer';
+import { enableCORS } from './cors.js';
 
 export default async function handler(req, res) {
+    // Enable CORS
+    if (enableCORS(req, res)) return;
+
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
     }

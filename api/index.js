@@ -1,4 +1,9 @@
+import { enableCORS } from './cors.js';
+
 export default function handler(req, res) {
+  // Enable CORS
+  if (enableCORS(req, res)) return;
+
   res.status(200).send(`
     <!DOCTYPE html>
     <html lang="en">
