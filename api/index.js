@@ -399,6 +399,9 @@ app.post("/course-inquiry", async (req, res) => {
   }
 });
 
+// Export the Express app as the module handler for Vercel
+module.exports = app;
+
 // Export for Vercel
 export default app;
 
