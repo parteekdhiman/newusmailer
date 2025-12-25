@@ -5,8 +5,9 @@
 
 export const enableCORS = (req, res) => {
   const allowedOrigins = [
-    process.env.FRONTEND_URL || 'https://testsite-snowy-gamma.vercel.app',
+    process.env.FRONTEND_URL || 'http://localhost:8080',
     'https://newusmailer.vercel.app',
+    'http://localhost:8080',
     'http://localhost:3000',
     'http://localhost:5173', // Vite dev server
   ];
