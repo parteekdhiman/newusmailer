@@ -9,9 +9,9 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { firstName, lastName, email, phone, message } = req.body;
+  const { fullName, email, phone, course, brochureUrl } = req.body;
 
-  if (!firstName || !lastName || !email || !phone) {
+  if (!fullName || !email || !phone || !course) {
     return res
       .status(400)
       .json({ ok: false, error: 'Missing required fields' });
@@ -29,10 +29,11 @@ export default async function handler(req, res) {
   });
 
   try {
+    // Email to admin
     const adminMail = {
-      from: `"Newus Contact" <${process.env.EMAIL_USER}>`,
+      from: `"Newus Courses" <${process.env.EMAIL_USER}>`,
       to: process.env.ADMIN_EMAIL,
-      subject: `📩 New Contact from ${firstName} ${lastName}`,
+      subject: `📚 Course Inquiry: ${course}`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -48,8 +49,8 @@ export default async function handler(req, res) {
                   <!-- Header -->
                   <tr>
                     <td style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:40px;text-align:center;">
-                      <h1 style="margin:0;color:#ffffff;font-size:28px;font-weight:600;">New Lead Received</h1>
-                      <p style="margin:10px 0 0;color:#e0e7ff;font-size:14px;">Someone just contacted Newus!</p>
+                      <h1 style="margin:0;color:#ffffff;font-size:28px;font-weight:600;">📚 New Course Inquiry</h1>
+                      <p style="margin:10px 0 0;color:#e0e7ff;font-size:14px;">Brochure download request received</p>
                     </td>
                   </tr>
                   
@@ -62,8 +63,14 @@ export default async function handler(req, res) {
                             <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f8f9fc;border-radius:8px;padding:20px;">
                               <tr>
                                 <td style="padding:8px 0;">
+                                  <span style="color:#6b7280;font-size:13px;text-transform:uppercase;letter-spacing:0.5px;">Course Interest</span>
+                                  <p style="margin:4px 0 0;color:#667eea;font-size:18px;font-weight:700;">${course}</p>
+                                </td>
+                              </tr>
+                              <tr>
+                                <td style="padding:8px 0;border-top:1px solid #e5e7eb;">
                                   <span style="color:#6b7280;font-size:13px;text-transform:uppercase;letter-spacing:0.5px;">Full Name</span>
-                                  <p style="margin:4px 0 0;color:#111827;font-size:16px;font-weight:600;">${firstName} ${lastName}</p>
+                                  <p style="margin:4px 0 0;color:#111827;font-size:16px;font-weight:600;">${fullName}</p>
                                 </td>
                               </tr>
                               <tr>
@@ -86,24 +93,9 @@ export default async function handler(req, res) {
                           </td>
                         </tr>
                         
-                        ${
-                          message
-                            ? `
-                        <tr>
-                          <td style="padding-bottom:24px;">
-                            <p style="margin:0 0 12px;color:#6b7280;font-size:13px;text-transform:uppercase;letter-spacing:0.5px;">Message</p>
-                            <div style="background-color:#f8f9fc;border-left:4px solid #667eea;border-radius:8px;padding:20px;">
-                              <p style="margin:0;color:#374151;font-size:15px;line-height:1.6;">${message}</p>
-                            </div>
-                          </td>
-                        </tr>
-                        `
-                            : ""
-                        }
-                        
                         <tr>
                           <td align="center" style="padding-top:20px;">
-                            <a href="mailto:${email}" style="display:inline-block;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;font-size:15px;">Reply to Lead</a>
+                            <a href="mailto:${email}" style="display:inline-block;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;font-size:15px;">Contact Lead</a>
                           </td>
                         </tr>
                       </table>
@@ -114,7 +106,7 @@ export default async function handler(req, res) {
                   <tr>
                     <td style="background-color:#f9fafb;padding:24px;text-align:center;border-top:1px solid #e5e7eb;">
                       <p style="margin:0;color:#9ca3af;font-size:13px;">
-                        This notification was sent from your Newus contact form
+                        This notification was sent from your Newus course inquiry form
                       </p>
                     </td>
                   </tr>
@@ -127,10 +119,11 @@ export default async function handler(req, res) {
       `,
     };
 
+    // Email to user with brochure link
     const userMail = {
       from: `"Newus Team" <${process.env.EMAIL_USER}>`,
       to: email,
-      subject: "✅ Thanks for contacting Newus",
+      subject: `📚 Your ${course} Brochure is Ready!`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -147,43 +140,41 @@ export default async function handler(req, res) {
                   <tr>
                     <td style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:50px 40px;text-align:center;">
                       <div style="background-color:rgba(255,255,255,0.2);width:80px;height:80px;border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;">
-                        <span style="font-size:40px;">✅</span>
+                        <span style="font-size:40px;">📚</span>
                       </div>
-                      <h1 style="margin:0;color:#ffffff;font-size:32px;font-weight:700;">Message Received!</h1>
-                      <p style="margin:12px 0 0;color:#e0e7ff;font-size:16px;">We'll get back to you soon</p>
+                      <h1 style="margin:0;color:#ffffff;font-size:32px;font-weight:700;">Your Brochure is Ready!</h1>
+                      <p style="margin:12px 0 0;color:#e0e7ff;font-size:16px;">Thanks for your interest in ${course}</p>
                     </td>
                   </tr>
                   
                   <!-- Content -->
                   <tr>
                     <td style="padding:40px;">
-                      <p style="margin:0 0 20px;color:#111827;font-size:18px;font-weight:600;">Hi ${firstName},</p>
+                      <p style="margin:0 0 20px;color:#111827;font-size:18px;font-weight:600;">Hi ${fullName},</p>
                       <p style="margin:0 0 24px;color:#4b5563;font-size:16px;line-height:1.6;">
-                        Thank you for reaching out to us! We've received your message and our team will review it carefully. 
-                        We typically respond within <strong style="color:#667eea;">24 hours</strong>.
+                        Thank you for your interest in our <strong style="color:#667eea;">${course}</strong> course! 
+                        We're excited to help you on your learning journey.
                       </p>
                       
-                      ${
-                        message
-                          ? `
-                      <div style="background-color:#f8f9fc;border-radius:10px;padding:24px;margin-bottom:24px;">
-                        <p style="margin:0 0 12px;color:#6b7280;font-size:13px;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;">Your Message:</p>
-                        <p style="margin:0;color:#374151;font-size:15px;line-height:1.7;font-style:italic;">"${message}"</p>
+                      ${brochureUrl ? `
+                      <div style="background:linear-gradient(135deg,#f0f4ff 0%,#f5f3ff 100%);border-radius:10px;padding:24px;margin-bottom:24px;text-align:center;">
+                        <p style="margin:0 0 16px;color:#667eea;font-size:14px;font-weight:600;">Download Your Brochure</p>
+                        <a href="${brochureUrl}" style="display:inline-block;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;font-size:15px;">📥 Download Brochure</a>
                       </div>
-                      `
-                          : ""
-                      }
+                      ` : ''}
                       
-                      <div style="background:linear-gradient(135deg,#f0f4ff 0%,#f5f3ff 100%);border-radius:10px;padding:24px;margin-bottom:24px;">
-                        <p style="margin:0 0 12px;color:#667eea;font-size:14px;font-weight:600;">What happens next?</p>
+                      <div style="background-color:#f8f9fc;border-radius:10px;padding:24px;margin-bottom:24px;">
+                        <p style="margin:0 0 12px;color:#667eea;font-size:14px;font-weight:600;">What's Next?</p>
                         <ul style="margin:0;padding-left:20px;color:#4b5563;font-size:14px;line-height:1.8;">
-                          <li>Our team reviews your inquiry</li>
-                          <li>We'll prepare a personalized response</li>
-                          <li>You'll hear from us within 24 hours</li>
+                          <li>Review the course curriculum and structure</li>
+                          <li>Our team will reach out within 24 hours</li>
+                          <li>We'll answer any questions you may have</li>
+                          <li>Get personalized guidance on enrollment</li>
                         </ul>
                       </div>
                       
                       <p style="margin:24px 0 0;color:#4b5563;font-size:15px;line-height:1.6;">
+                        Have questions? Feel free to reply to this email anytime!<br/><br/>
                         Best regards,<br/>
                         <strong style="color:#111827;font-size:16px;">The Newus Team</strong>
                       </p>
@@ -194,10 +185,7 @@ export default async function handler(req, res) {
                   <tr>
                     <td style="background-color:#f9fafb;padding:32px;text-align:center;border-top:1px solid #e5e7eb;">
                       <p style="margin:0 0 16px;color:#6b7280;font-size:14px;">
-                        Need immediate assistance?
-                      </p>
-                      <p style="margin:0;color:#9ca3af;font-size:13px;">
-                        Reply to this email or call us at your convenience
+                        Ready to enroll? We're here to help!
                       </p>
                       <div style="margin-top:24px;padding-top:24px;border-top:1px solid #e5e7eb;">
                         <p style="margin:0;color:#9ca3af;font-size:12px;">
@@ -215,12 +203,18 @@ export default async function handler(req, res) {
       `,
     };
 
+    // Send both emails
     await transporter.sendMail(adminMail);
     await transporter.sendMail(userMail);
 
-    res.status(200).json({ ok: true, emailSent: true });
+    // IMPORTANT: Return the brochureUrl in the response
+    res.status(200).json({ 
+      ok: true, 
+      emailSent: true,
+      brochureUrl: brochureUrl || null
+    });
   } catch (err) {
-    console.error("Lead Error:", err);
+    console.error("Course Inquiry Error:", err);
     res.status(500).json({ ok: false, error: "Email sending failed" });
   }
 }
