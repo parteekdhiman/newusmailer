@@ -5,7 +5,12 @@
 
 export const enableCORS = (req, res) => {
   const allowedOrigins = [
+    // prefer explicit env override when set
     process.env.FRONTEND_URL || 'http://localhost:8080',
+    // Staging / production frontends
+    'https://testsite-snowy-gamma.vercel.app',
+    'https://newus.in',
+    // other known origins
     'https://newusmailer.vercel.app',
     'http://localhost:8080',
     'http://localhost:3000',

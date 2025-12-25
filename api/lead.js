@@ -9,16 +9,20 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { fullName, email, phone, course, brochureUrl } = req.body;
+  const { fullName, firstName, lastName, name, email, phone, course, message, brochureUrl } = req.body;
 
-  if (!fullName || !email || !phone || !course) {
+  // Build a full name from available fields
+  const computedFullName = fullName || (firstName ? `${firstName} ${lastName || ''}`.trim() : null) || name || null;
+  const courseName = course || message || 'General Enquiry';
+
+  if (!computedFullName || !email || !phone) {
     return res
       .status(400)
-      .json({ ok: false, error: 'Missing required fields' });
+      .json({ ok: false, error: 'Missing required fields (name, email, phone)' });
   }
 
   // Create transporter using environment variables
-  const transporter = nodemailer.createTransporter({
+  const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST || 'smtp.gmail.com',
     port: Number(process.env.EMAIL_PORT) || 587,
     secure: process.env.EMAIL_SECURE === 'true' || false,
@@ -33,7 +37,7 @@ export default async function handler(req, res) {
     const adminMail = {
       from: `"Newus Courses" <${process.env.EMAIL_USER}>`,
       to: process.env.ADMIN_EMAIL,
-      subject: `📚 Course Inquiry: ${course}`,
+      subject: `📚 Course Inquiry: ${courseName}`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -64,13 +68,13 @@ export default async function handler(req, res) {
                               <tr>
                                 <td style="padding:8px 0;">
                                   <span style="color:#6b7280;font-size:13px;text-transform:uppercase;letter-spacing:0.5px;">Course Interest</span>
-                                  <p style="margin:4px 0 0;color:#667eea;font-size:18px;font-weight:700;">${course}</p>
+                                  <p style="margin:4px 0 0;color:#667eea;font-size:18px;font-weight:700;">${courseName}</p>
                                 </td>
                               </tr>
                               <tr>
                                 <td style="padding:8px 0;border-top:1px solid #e5e7eb;">
                                   <span style="color:#6b7280;font-size:13px;text-transform:uppercase;letter-spacing:0.5px;">Full Name</span>
-                                  <p style="margin:4px 0 0;color:#111827;font-size:16px;font-weight:600;">${fullName}</p>
+                                  <p style="margin:4px 0 0;color:#111827;font-size:16px;font-weight:600;">${computedFullName}</p>
                                 </td>
                               </tr>
                               <tr>
@@ -89,6 +93,14 @@ export default async function handler(req, res) {
                                   </p>
                                 </td>
                               </tr>
+                              ${message ? `
+                              <tr>
+                                <td style="padding:8px 0;border-top:1px solid #e5e7eb;">
+                                  <span style="color:#6b7280;font-size:13px;text-transform:uppercase;letter-spacing:0.5px;">Message</span>
+                                  <p style="margin:4px 0 0;color:#111827;font-size:15px;">${message}</p>
+                                </td>
+                              </tr>
+                              ` : ''}
                             </table>
                           </td>
                         </tr>
@@ -149,10 +161,10 @@ export default async function handler(req, res) {
                   
                   <!-- Content -->
                   <tr>
-                    <td style="padding:40px;">
-                      <p style="margin:0 0 20px;color:#111827;font-size:18px;font-weight:600;">Hi ${fullName},</p>
+                            <td style="padding:40px;">
+                      <p style="margin:0 0 20px;color:#111827;font-size:18px;font-weight:600;">Hi ${computedFullName},</p>
                       <p style="margin:0 0 24px;color:#4b5563;font-size:16px;line-height:1.6;">
-                        Thank you for your interest in our <strong style="color:#667eea;">${course}</strong> course! 
+                        Thank you for your interest in our <strong style="color:#667eea;">${courseName}</strong> course! 
                         We're excited to help you on your learning journey.
                       </p>
                       
