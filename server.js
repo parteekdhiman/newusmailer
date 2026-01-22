@@ -1,10 +1,10 @@
 // Local development server for testing Vercel API routes
+dotenv.config();
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 
 // Load environment variables
-dotenv.config();
 
 const app = express();
 
@@ -17,6 +17,7 @@ import healthHandler from './api/health.js';
 import leadHandler from './api/lead.js';
 import newsletterHandler from './api/newsletter.js';
 import courseInquiryHandler from './api/course-inquiry.js';
+import chatbotHandler from './api/chatbot.js';
 import indexHandler from './api/index.js';
 
 // Define routes that match Vercel API routes
@@ -24,6 +25,7 @@ app.get('/api/health', healthHandler);
 app.post('/api/lead', leadHandler);
 app.post('/api/newsletter', newsletterHandler);
 app.post('/api/course-inquiry', courseInquiryHandler);
+app.post('/api/chatbot', chatbotHandler);
 app.get('/', indexHandler);
 
 const PORT = process.env.PORT || 3000;

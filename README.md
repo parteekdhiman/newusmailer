@@ -53,9 +53,18 @@ vercel --prod
 
 ## Environment Variables
 
-Make sure to set the following environment variables in your Vercel project:
+Before deploying or running locally, copy the environment variables:
 
-- `EMAIL_USER`: Email address for sending emails
-- `EMAIL_PASS`: Password for the email account
-- `ADMIN_EMAIL`: Admin email address to receive notifications
-- `FRONTEND_URL`: URL of the frontend application
+```bash
+# Copy environment file
+cp .env.example .env
+```
+
+Edit the `.env` file with your configuration values. Required variables include:
+- `EMAIL_USER` and `EMAIL_PASS` for email functionality
+- `ADMIN_EMAIL` for notifications
+- `FRONTEND_URL` for CORS configuration
+
+See `.env.example` for all available options and detailed documentation.
+
+For Vercel deployment, set these same variables in your Vercel project settings.
