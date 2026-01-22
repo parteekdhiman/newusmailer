@@ -1,15 +1,6 @@
 import OpenAI from "openai";
 import { coursesList } from "../shared/coursesList.js";
 
-const apiKey = "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";
-
-const ai = apiKey
-  ? new OpenAI({
-      apiKey,
-      baseURL: "https://openrouter.ai/api/v1",
-    })
-  : null;
-
 // ✅ CACHE COURSE DATA (PERFORMANCE BOOST)
 const COURSE_CONTEXT = JSON.stringify(
   coursesList.map((course) => ({
@@ -31,6 +22,16 @@ export default async function handler(req, res) {
   }
 
   try {
+    const apiKey = process.env.OPENROUTER_API_KEY;
+    // console.log(apiKey);
+    
+    const ai = apiKey
+      ? new OpenAI({
+          apiKey,
+          baseURL: "https://openrouter.ai/api/v1",
+        })
+      : null;
+
     if (!ai) {
       return res.status(500).json({
         error: "OPENROUTER_API_KEY not configured",
