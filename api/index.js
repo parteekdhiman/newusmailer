@@ -12,6 +12,7 @@ export default function handler(req, res) {
       lead: '/api/lead',
       newsletter: '/api/newsletter',
       courseInquiry: '/api/course-inquiry',
+      chatbot: '/api/chatbot',
     },
     status: 'OK'
   });

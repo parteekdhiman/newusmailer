@@ -8,6 +8,7 @@
     { "src": "/api/lead", "dest": "/api/lead.js" },
     { "src": "/api/newsletter", "dest": "/api/newsletter.js" },
     { "src": "/api/course-inquiry", "dest": "/api/course-inquiry.js" },
+    { "src": "/api/chatbot", "dest": "/api/chatbot.js" },
     { "src": "/(.*)", "dest": "/api/index.js" }
   ]
 }
