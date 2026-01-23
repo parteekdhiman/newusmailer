@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { coursesList } from "../shared/coursesList.js";
+import { enableCORS } from './cors.js';
 
 // ✅ CACHE COURSE DATA (PERFORMANCE BOOST)
 const COURSE_CONTEXT = JSON.stringify(
@@ -17,6 +18,9 @@ const COURSE_CONTEXT = JSON.stringify(
 const MAX_HISTORY = 10;
 
 export default async function handler(req, res) {
+  // Enable CORS
+  if (enableCORS(req, res)) return;
+
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
