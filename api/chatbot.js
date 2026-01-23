@@ -81,6 +81,7 @@ ${COURSE_CONTEXT}`,
       response: completion.choices[0].message.content,
       timestamp: new Date().toISOString(),
     });
+    console.log(completion.choices[0].message.content)
   } catch (error) {
     console.error("Chatbot error:", error);
     res.status(500).json({
