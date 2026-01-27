@@ -9,6 +9,7 @@
     { "src": "/api/newsletter", "dest": "/api/newsletter.js" },
     { "src": "/api/course-inquiry", "dest": "/api/course-inquiry.js" },
     { "src": "/api/chatbot", "dest": "/api/chatbot.js" },
+    { "src": "/api/interviewer", "dest": "/api/interviewer.js" },
     { "src": "/(.*)", "dest": "/api/index.js" }
   ]
 }
