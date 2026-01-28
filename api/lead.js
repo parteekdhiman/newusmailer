@@ -1,5 +1,7 @@
 import nodemailer from 'nodemailer';
 import { enableCORS } from './cors.js';
+import { validateEmail, validatePhone, validateName, validateTextField, escapeHtml } from '../shared/sanitize.js';
+import { rateLimitMiddleware } from '../shared/rateLimiter.js';
 
 export default async function handler(req, res) {
   // Enable CORS
@@ -9,16 +11,52 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // SECURITY: Rate limit by IP (prevent spam abuse)
+  if (rateLimitMiddleware(req, res, 'ip', 5, 60 * 60 * 1000)) return;
+
   const { fullName, firstName, lastName, name, email, phone, course, message, brochureUrl } = req.body;
 
-  // Build a full name from available fields
-  const computedFullName = fullName || (firstName ? `${firstName} ${lastName || ''}`.trim() : null) || name || null;
-  const courseName = course || message || 'General Enquiry';
+  // SECURITY: Validate and sanitize all inputs
+  const validatedEmail = validateEmail(email);
+  if (!validatedEmail) {
+    return res.status(400).json({ ok: false, error: 'Invalid email address' });
+  }
 
-  if (!computedFullName || !email || !phone) {
-    return res
-      .status(400)
-      .json({ ok: false, error: 'Missing required fields (name, email, phone)' });
+  const validatedPhone = validatePhone(phone);
+  if (!validatedPhone) {
+    return res.status(400).json({ ok: false, error: 'Invalid phone number' });
+  }
+
+  // Build a full name from available fields
+  let computedFullName = fullName || (firstName ? `${firstName} ${lastName || ''}`.trim() : null) || name || null;
+  computedFullName = validateName(computedFullName);
+  
+  if (!computedFullName) {
+    return res.status(400).json({ ok: false, error: 'Invalid name format' });
+  }
+
+  // SECURITY: Validate course name and message
+  const validatedCourse = validateTextField(course, 1, 200) || 'General Enquiry';
+  const validatedMessage = message ? validateTextField(message, 0, 1000) : null;
+
+  // SECURITY: Validate brochure URL if provided
+  let validatedBrochureUrl = null;
+  if (brochureUrl && typeof brochureUrl === 'string') {
+    try {
+      const urlObj = new URL(brochureUrl);
+      // Only allow https URLs
+      if (urlObj.protocol === 'https:') {
+        validatedBrochureUrl = brochureUrl;
+      }
+    } catch (e) {
+      // Invalid URL, silently ignore
+    }
+  }
+
+  // SECURITY: Validate admin email is configured
+  if (!process.env.ADMIN_EMAIL || !validateEmail(process.env.ADMIN_EMAIL)) {
+    console.error('Admin email not properly configured');
+    return res.status(500).json({ ok: false, error: 'Service configuration error' });
   }
 
   // Create transporter using environment variables
@@ -33,11 +71,16 @@ export default async function handler(req, res) {
   });
 
   try {
-    // Email to admin
+    // SECURITY: Set timeout for email operations (prevent hanging)
+    const emailTimeout = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Email timeout')), 25000)
+    );
+
+    // Email to admin - SECURITY: Escape all user input in HTML
     const adminMail = {
       from: `"Newus Courses" <${process.env.EMAIL_USER}>`,
       to: process.env.ADMIN_EMAIL,
-      subject: `📚 Course Inquiry: ${courseName}`,
+      subject: `📚 Course Inquiry: ${escapeHtml(validatedCourse)}`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -68,20 +111,20 @@ export default async function handler(req, res) {
                               <tr>
                                 <td style="padding:8px 0;">
                                   <span style="color:#6b7280;font-size:13px;text-transform:uppercase;letter-spacing:0.5px;">Course Interest</span>
-                                  <p style="margin:4px 0 0;color:#667eea;font-size:18px;font-weight:700;">${courseName}</p>
+                                  <p style="margin:4px 0 0;color:#667eea;font-size:18px;font-weight:700;">${escapeHtml(validatedCourse)}</p>
                                 </td>
                               </tr>
                               <tr>
                                 <td style="padding:8px 0;border-top:1px solid #e5e7eb;">
                                   <span style="color:#6b7280;font-size:13px;text-transform:uppercase;letter-spacing:0.5px;">Full Name</span>
-                                  <p style="margin:4px 0 0;color:#111827;font-size:16px;font-weight:600;">${computedFullName}</p>
+                                  <p style="margin:4px 0 0;color:#111827;font-size:16px;font-weight:600;">${escapeHtml(computedFullName)}</p>
                                 </td>
                               </tr>
                               <tr>
                                 <td style="padding:8px 0;border-top:1px solid #e5e7eb;">
                                   <span style="color:#6b7280;font-size:13px;text-transform:uppercase;letter-spacing:0.5px;">Email</span>
                                   <p style="margin:4px 0 0;color:#111827;font-size:16px;font-weight:600;">
-                                    <a href="mailto:${email}" style="color:#667eea;text-decoration:none;">${email}</a>
+                                    <a href="mailto:${escapeHtml(validatedEmail)}" style="color:#667eea;text-decoration:none;">${escapeHtml(validatedEmail)}</a>
                                   </p>
                                 </td>
                               </tr>
@@ -89,15 +132,15 @@ export default async function handler(req, res) {
                                 <td style="padding:8px 0;border-top:1px solid #e5e7eb;">
                                   <span style="color:#6b7280;font-size:13px;text-transform:uppercase;letter-spacing:0.5px;">Phone</span>
                                   <p style="margin:4px 0 0;color:#111827;font-size:16px;font-weight:600;">
-                                    <a href="tel:${phone}" style="color:#667eea;text-decoration:none;">${phone}</a>
+                                    <a href="tel:${escapeHtml(validatedPhone)}" style="color:#667eea;text-decoration:none;">${escapeHtml(validatedPhone)}</a>
                                   </p>
                                 </td>
                               </tr>
-                              ${message ? `
+                              ${validatedMessage ? `
                               <tr>
                                 <td style="padding:8px 0;border-top:1px solid #e5e7eb;">
                                   <span style="color:#6b7280;font-size:13px;text-transform:uppercase;letter-spacing:0.5px;">Message</span>
-                                  <p style="margin:4px 0 0;color:#111827;font-size:15px;">${message}</p>
+                                  <p style="margin:4px 0 0;color:#111827;font-size:15px;">${escapeHtml(validatedMessage)}</p>
                                 </td>
                               </tr>
                               ` : ''}
@@ -107,7 +150,7 @@ export default async function handler(req, res) {
                         
                         <tr>
                           <td align="center" style="padding-top:20px;">
-                            <a href="mailto:${email}" style="display:inline-block;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;font-size:15px;">Contact Lead</a>
+                            <a href="mailto:${escapeHtml(validatedEmail)}" style="display:inline-block;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;font-size:15px;">Contact Lead</a>
                           </td>
                         </tr>
                       </table>
@@ -131,11 +174,11 @@ export default async function handler(req, res) {
       `,
     };
 
-    // Email to user with brochure link
+    // Email to user with brochure link - SECURITY: Escape user input
     const userMail = {
       from: `"Newus Team" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: `📚 Your ${course} Brochure is Ready!`,
+      to: validatedEmail,
+      subject: `📚 Your ${escapeHtml(validatedCourse)} Brochure is Ready!`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -155,23 +198,23 @@ export default async function handler(req, res) {
                         <span style="font-size:40px;">📚</span>
                       </div>
                       <h1 style="margin:0;color:#ffffff;font-size:32px;font-weight:700;">Your Brochure is Ready!</h1>
-                      <p style="margin:12px 0 0;color:#e0e7ff;font-size:16px;">Thanks for your interest in ${course}</p>
+                      <p style="margin:12px 0 0;color:#e0e7ff;font-size:16px;">Thanks for your interest in ${escapeHtml(validatedCourse)}</p>
                     </td>
                   </tr>
                   
                   <!-- Content -->
                   <tr>
-                            <td style="padding:40px;">
-                      <p style="margin:0 0 20px;color:#111827;font-size:18px;font-weight:600;">Hi ${computedFullName},</p>
+                    <td style="padding:40px;">
+                      <p style="margin:0 0 20px;color:#111827;font-size:18px;font-weight:600;">Hi ${escapeHtml(computedFullName)},</p>
                       <p style="margin:0 0 24px;color:#4b5563;font-size:16px;line-height:1.6;">
-                        Thank you for your interest in our <strong style="color:#667eea;">${courseName}</strong> course! 
+                        Thank you for your interest in our <strong style="color:#667eea;">${escapeHtml(validatedCourse)}</strong> course! 
                         We're excited to help you on your learning journey.
                       </p>
                       
-                      ${brochureUrl ? `
+                      ${validatedBrochureUrl ? `
                       <div style="background:linear-gradient(135deg,#f0f4ff 0%,#f5f3ff 100%);border-radius:10px;padding:24px;margin-bottom:24px;text-align:center;">
                         <p style="margin:0 0 16px;color:#667eea;font-size:14px;font-weight:600;">Download Your Brochure</p>
-                        <a href="${brochureUrl}" style="display:inline-block;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;font-size:15px;">📥 Download Brochure</a>
+                        <a href="${escapeHtml(validatedBrochureUrl)}" style="display:inline-block;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;font-size:15px;">📥 Download Brochure</a>
                       </div>
                       ` : ''}
                       
@@ -215,18 +258,31 @@ export default async function handler(req, res) {
       `,
     };
 
-    // Send both emails
-    await transporter.sendMail(adminMail);
-    await transporter.sendMail(userMail);
+    // Send both emails with timeout protection
+    const adminPromise = transporter.sendMail(adminMail);
+    const userPromise = transporter.sendMail(userMail);
 
-    // IMPORTANT: Return the brochureUrl in the response
+    await Promise.race([Promise.all([adminPromise, userPromise]), emailTimeout]);
+
     res.status(200).json({ 
       ok: true, 
       emailSent: true,
-      brochureUrl: brochureUrl || null
+      brochureUrl: validatedBrochureUrl || null
     });
   } catch (err) {
-    console.error("Course Inquiry Error:", err);
-    res.status(500).json({ ok: false, error: "Email sending failed" });
+    // SECURITY: Don't leak error details to client
+    const errorMsg = err.message || 'Unknown error';
+    
+    if (errorMsg === 'Email timeout') {
+      return res.status(504).json({ ok: false, error: 'Service timeout. Please try again.' });
+    }
+    
+    if (errorMsg.includes('Invalid login') || errorMsg.includes('Authentication failed')) {
+      console.error('Email authentication failed - check EMAIL_USER/EMAIL_PASS');
+      return res.status(500).json({ ok: false, error: 'Service configuration error' });
+    }
+
+    console.error("Lead Submission Error:", { message: errorMsg, code: err.code });
+    res.status(500).json({ ok: false, error: "Submission failed" });
   }
 }
