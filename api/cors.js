@@ -25,8 +25,11 @@ export const enableCORS = (req, res) => {
   const envFrontendUrl = process.env.FRONTEND_URL;
   const isValidUrl = envFrontendUrl && /^https?:\/\/[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/.test(envFrontendUrl);
 
+  // Default to production origins on Vercel (NODE_ENV may not be set)
+  const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
+  
   const allowedOrigins =
-    process.env.NODE_ENV === 'production'
+    isProduction
       ? [
           ...productionOrigins,
           ...(isValidUrl ? [envFrontendUrl] : []), // Add env override only in production if valid
@@ -39,10 +42,14 @@ export const enableCORS = (req, res) => {
   if (origin && allowedOrigins.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Access-Control-Allow-Credentials', 'true');
-  } else {
-    // SECURITY: Reject with 'null' origin instead of wildcard
+  } else if (origin && isProduction) {
+    // SECURITY: On production, only allow listed origins
     res.setHeader('Access-Control-Allow-Origin', 'null');
     res.setHeader('Access-Control-Allow-Credentials', 'false');
+  } else {
+    // SECURITY: Allow development origins to work more flexibly
+    res.setHeader('Access-Control-Allow-Origin', origin || '*');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
   }
 
   // SECURITY: Only allow methods actually needed
