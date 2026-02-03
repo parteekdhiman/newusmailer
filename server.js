@@ -10,7 +10,8 @@ const app = express();
 
 // Enable CORS
 app.use(cors({ origin: process.env.FRONTEND_URL || '*', credentials: true }));
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Import the API route functions directly
 import healthHandler from './api/health.js';
@@ -19,6 +20,7 @@ import newsletterHandler from './api/newsletter.js';
 import courseInquiryHandler from './api/course-inquiry.js';
 import chatbotHandler from './api/chatbot.js';
 import interviewerHandler from './api/interviewer.js';
+import candidateHandler from './api/candidate.js';
 import indexHandler from './api/index.js';
 
 // Define routes that match Vercel API routes
@@ -28,6 +30,7 @@ app.post('/api/newsletter', newsletterHandler);
 app.post('/api/course-inquiry', courseInquiryHandler);
 app.post('/api/chatbot', chatbotHandler);
 app.post('/api/interviewer', interviewerHandler);
+app.post('/api/candidate', candidateHandler);
 app.get('/', indexHandler);
 
 const PORT = process.env.PORT || 3000;
