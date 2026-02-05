@@ -120,7 +120,7 @@ export default async function handler(req, res) {
       html: `
         <div style="font-family: Arial, sans-serif; padding: 20px;">
           <h2 style="color: #4F46E5;">Registration Received</h2>
-          <p>Dear ${escapeHtml(fullName)},</p>
+          <p>Dear <b>${escapeHtml(fullName)}</b>,</p>
           <p>Thank you for registering for the Job Fair. We have received your application and documents.</p>
           <p>Our team will review your application and get back to you soon.</p>
           <br>
