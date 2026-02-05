@@ -2,6 +2,11 @@ import nodemailer from 'nodemailer';
 import { enableCORS } from './cors.js';
 import { validateEmail, validatePhone, validateName, escapeHtml } from '../shared/sanitize.js';
 
+// Vercel Function Configuration
+export const config = {
+  maxDuration: 60, // Maximum execution time in seconds
+};
+
 // Helper to convert base64 to buffer for attachments
 const processAttachment = (base64Str, filename) => {
   if (!base64Str || typeof base64Str !== 'string') return null;
