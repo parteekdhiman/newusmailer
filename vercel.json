@@ -11,6 +11,7 @@
     { "src": "/api/chatbot", "dest": "/api/chatbot.js" },
     { "src": "/api/interviewer", "dest": "/api/interviewer.js" },
     { "src": "/api/candidate", "dest": "/api/candidate.js" },
+    { "src": "/api/registration", "dest": "/api/registration.js" },
     { "src": "/(.*)", "dest": "/api/index.js" }
   ]
 }

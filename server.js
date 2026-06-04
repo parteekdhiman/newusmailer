@@ -21,6 +21,7 @@ import courseInquiryHandler from './api/course-inquiry.js';
 import chatbotHandler from './api/chatbot.js';
 import interviewerHandler from './api/interviewer.js';
 import candidateHandler from './api/candidate.js';
+import registrationHandler from './api/registration.js';
 import indexHandler from './api/index.js';
 
 // Define routes that match Vercel API routes
@@ -31,6 +32,7 @@ app.post('/api/course-inquiry', courseInquiryHandler);
 app.post('/api/chatbot', chatbotHandler);
 app.post('/api/interviewer', interviewerHandler);
 app.post('/api/candidate', candidateHandler);
+app.post('/api/registration', registrationHandler);
 app.get('/', indexHandler);
 
 const PORT = process.env.PORT || 3000;

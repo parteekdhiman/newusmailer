@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import { GoogleGenAI } from "@google/genai";
 import { coursesList } from "../shared/coursesList.js";
 import { enableCORS } from './cors.js';
 import { rateLimitMiddleware } from '../shared/rateLimiter.js';
@@ -30,20 +30,16 @@ export default async function handler(req, res) {
   if (rateLimitMiddleware(req, res, 'ip', 20, 60 * 1000)) return;
 
   try {
-    const apiKey = process.env.OPENROUTER_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY;
     
     if (!apiKey) {
-      console.error('OPENROUTER_API_KEY not configured');
+      console.error('GEMINI_API_KEY not configured');
       return res.status(500).json({
         error: "Service unavailable. API not configured.",
       });
     }
 
-    const ai = new OpenAI({
-      apiKey,
-      baseURL: "https://openrouter.ai/api/v1",
-      timeout: 25000, // 25 second timeout (Vercel limit is 30s)
-    });
+    const ai = new GoogleGenAI({ apiKey });
 
     const { message, conversationHistory = [] } = req.body;
 
@@ -88,14 +84,15 @@ ${COURSE_CONTEXT}`,
     ];
 
     try {
-      const completion = await ai.chat.completions.create({
-        model: "meta-llama/llama-3.3-70b-instruct:free",
-        messages,
-        temperature: 0.6,
-        max_tokens: 700,
+      const completion = await ai.models.generateContent({
+        model: "gemini-2.0-flash",
+        contents: messages.map(msg => ({
+          role: msg.role === "system" ? "user" : msg.role,
+          parts: [{ text: msg.content }],
+        })),
       });
 
-      const responseText = completion.choices[0]?.message?.content || 'Unable to generate response. Please try again.';
+      const responseText = completion.candidates?.[0]?.content?.parts?.[0]?.text || 'Unable to generate response. Please try again.';
 
       res.status(200).json({
         response: responseText,

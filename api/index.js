@@ -13,6 +13,9 @@ export default function handler(req, res) {
       newsletter: '/api/newsletter',
       courseInquiry: '/api/course-inquiry',
       chatbot: '/api/chatbot',
+      interviewer: '/api/interviewer',
+      candidate: '/api/candidate',
+      registration: '/api/registration'
     },
     status: 'OK'
   });
