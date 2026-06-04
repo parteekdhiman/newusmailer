@@ -27,13 +27,26 @@ const validateIndianPhone = (phone) => {
 };
 
 /**
- * Validate marks (0-100)
+ * Validate marks for 10th class (0-700)
  * @param {number|string} marks - Marks to validate
  * @returns {number|null} - Marks as number or null if invalid
  */
-const validateMarks = (marks) => {
+const validateTenthMarks = (marks) => {
   const num = Number(marks);
-  if (isNaN(num) || num < 0 || num > 100) {
+  if (isNaN(num) || num < 0 || num > 700) {
+    return null;
+  }
+  return num;
+};
+
+/**
+ * Validate marks for 12th class (0-500)
+ * @param {number|string} marks - Marks to validate
+ * @returns {number|null} - Marks as number or null if invalid
+ */
+const validateTwelfthMarks = (marks) => {
+  const num = Number(marks);
+  if (isNaN(num) || num < 0 || num > 500) {
     return null;
   }
   return num;
@@ -73,14 +86,14 @@ export default async function handler(req, res) {
     return res.status(400).json({ ok: false, error: 'Invalid Indian phone number (must be 10 digits starting with 6-9)' });
   }
 
-  const validatedTenthMarks = validateMarks(tenthMarks);
+  const validatedTenthMarks = validateTenthMarks(tenthMarks);
   if (validatedTenthMarks === null) {
-    return res.status(400).json({ ok: false, error: 'Invalid 10th marks (must be 0-100)' });
+    return res.status(400).json({ ok: false, error: 'Invalid 10th marks (must be 0-700)' });
   }
 
-  const validatedTwelfthMarks = validateMarks(twelfthMarks);
+  const validatedTwelfthMarks = validateTwelfthMarks(twelfthMarks);
   if (validatedTwelfthMarks === null) {
-    return res.status(400).json({ ok: false, error: 'Invalid 12th marks (must be 0-100)' });
+    return res.status(400).json({ ok: false, error: 'Invalid 12th marks (must be 0-500)' });
   }
 
   // SECURITY: Prevent duplicate submissions
