@@ -174,11 +174,11 @@ export default async function handler(req, res) {
                         </tr>
                         <tr style="background-color:#f9fafb;">
                           <td style="padding:12px;border-bottom:1px solid #e5e7eb;color:#666;font-weight:500;">10th Marks:</td>
-                          <td style="padding:12px;border-bottom:1px solid #e5e7eb;color:#333;">${validatedTenthMarks}%</td>
+                          <td style="padding:12px;border-bottom:1px solid #e5e7eb;color:#333;">${validatedTenthMarks} / 700</td>
                         </tr>
                         <tr>
                           <td style="padding:12px;color:#666;font-weight:500;">12th Marks:</td>
-                          <td style="padding:12px;color:#333;">${validatedTwelfthMarks}%</td>
+                          <td style="padding:12px;color:#333;">${validatedTwelfthMarks} / 500</td>
                         </tr>
                       </table>
 
@@ -252,7 +252,7 @@ export default async function handler(req, res) {
                         </tr>
                         <tr>
                           <td style="padding:12px;color:#666;font-weight:500;">10th Marks:</td>
-                          <td style="padding:12px;color:#333;">${validatedTenthMarks}%</td>
+                          <td style="padding:12px;color:#333;">${validatedTenthMarks} / 700</td>
                         </tr>
                       </table>
 
